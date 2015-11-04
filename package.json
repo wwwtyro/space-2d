@@ -1,0 +1,28 @@
+{
+  "name": "space-2d",
+  "version": "1.0.0",
+  "description": "Fast procedural 2D space scene generation on the GPU.",
+  "dependencies": {
+    "brfs": "^1.4.1",
+    "gl-matrix": "^2.3.1",
+    "gulp": "^3.9.0",
+    "gulp-browserify": "^0.5.1",
+    "gulp-connect": "^2.2.0",
+    "gulp-rename": "^1.2.2",
+    "query-string": "^3.0.0",
+    "rng": "^0.2.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "gamedev",
+    "space",
+    "2d",
+    "procedural",
+    "nebula"
+  ],
+  "author": "Rye Terrell",
+  "license": "MIT"
+}

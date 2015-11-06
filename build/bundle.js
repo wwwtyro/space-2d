@@ -5367,8 +5367,9 @@ window.onload = function() {
         this.stars = params.stars === undefined ? true : params.stars === "true";
         this.sun = params.sun === undefined ? true : params.sun === "true";
         this.nebulae = params.nebulae === undefined ? true : params.nebulae === "true";
-        this.width = params.width || 1024;
-        this.height = params.height || 1024;
+        this.shortScale = params.shortScale === undefined ? true : params.shortScale;
+        this.width = params.width || 1600;
+        this.height = params.height || 900;
         this.render = function() {
             render();
         };
@@ -5385,6 +5386,7 @@ window.onload = function() {
     gui.add(menu, 'stars').name("Stars").onChange(render);
     gui.add(menu, 'sun').name("Sun").onChange(render);
     gui.add(menu, 'nebulae').name("Nebulae").onChange(render);
+    gui.add(menu, 'shortScale').name("Short scale").onChange(render);
     gui.add(menu, 'width').name("Width");
     gui.add(menu, 'height').name("Height");
     gui.add(menu, 'render').name("Render");
@@ -5407,7 +5409,8 @@ window.onload = function() {
             pointStars: menu.pointStars,
             stars: menu.stars,
             sun: menu.sun,
-            nebulae: menu.nebulae
+            nebulae: menu.nebulae,
+            shortScale: menu.shortScale
         }
         location.hash = qs.stringify(params);
     }
@@ -5444,7 +5447,8 @@ window.onload = function() {
             pointStars: menu.pointStars,
             stars: menu.stars,
             sun: menu.sun,
-            nebulae: menu.nebulae
+            nebulae: menu.nebulae,
+            shortScale: menu.shortScale
         });
         setQueryString();
     }
@@ -5508,6 +5512,9 @@ module.exports = function(canvas) {
         gl.clear(gl.COLOR_BUFFER_BIT);
         var uRes = [canvas.width, canvas.height];
         var uRenderScale = Math.max(canvas.width, canvas.height);
+        if (opts.shortScale) {
+            uRenderScale = Math.min(canvas.width, canvas.height);
+        }
         var rand = new rng.MT(parseInt(opts.seed, 36) + 0);
         if (opts.pointStars) {
             programStars.setUniform("uRenderScale", "1f", uRenderScale);

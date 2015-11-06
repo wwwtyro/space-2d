@@ -49,6 +49,9 @@ module.exports = function(canvas) {
         gl.clear(gl.COLOR_BUFFER_BIT);
         var uRes = [canvas.width, canvas.height];
         var uRenderScale = Math.max(canvas.width, canvas.height);
+        if (opts.shortScale) {
+            uRenderScale = Math.min(canvas.width, canvas.height);
+        }
         var rand = new rng.MT(parseInt(opts.seed, 36) + 0);
         if (opts.pointStars) {
             programStars.setUniform("uRenderScale", "1f", uRenderScale);

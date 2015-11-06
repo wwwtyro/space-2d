@@ -18,7 +18,7 @@ window.onload = function() {
         this.stars = params.stars === undefined ? true : params.stars === "true";
         this.sun = params.sun === undefined ? true : params.sun === "true";
         this.nebulae = params.nebulae === undefined ? true : params.nebulae === "true";
-        this.shortScale = params.shortScale === undefined ? true : params.shortScale;
+        this.shortScale = params.shortScale === undefined ? false : params.shortScale === "true";
         this.width = params.width || 1600;
         this.height = params.height || 900;
         this.render = function() {
@@ -31,15 +31,15 @@ window.onload = function() {
         autoPlace: false,
         width: 320
     });
-    gui.add(menu, 'seed').name("Seed").listen();
+    gui.add(menu, 'seed').name("Seed").listen().onFinishChange(render);
     gui.add(menu, 'randomize').name("Randomize seed");
     gui.add(menu, 'pointStars').name("Point stars").onChange(render);
     gui.add(menu, 'stars').name("Stars").onChange(render);
     gui.add(menu, 'sun').name("Sun").onChange(render);
     gui.add(menu, 'nebulae').name("Nebulae").onChange(render);
     gui.add(menu, 'shortScale').name("Short scale").onChange(render);
-    gui.add(menu, 'width').name("Width");
-    gui.add(menu, 'height').name("Height");
+    gui.add(menu, 'width').name("Width").onFinishChange(render);
+    gui.add(menu, 'height').name("Height").onFinishChange(render);
     gui.add(menu, 'render').name("Render");
     document.body.appendChild(gui.domElement);
     gui.domElement.style.position = "fixed";

@@ -52,13 +52,13 @@ module.exports = function(canvas) {
         if (opts.shortScale) {
             uRenderScale = Math.min(canvas.width, canvas.height);
         }
-        var rand = new rng.MT(parseInt(opts.seed, 36) + 0);
+        var rand = new rng.MT(hashcode(opts.seed) + 1000);
         if (opts.pointStars) {
             programStars.setUniform("uRenderScale", "1f", uRenderScale);
             programStars.setUniform("uDensity", "1f", rand.random() * 0.05);
             renderableStars.render();
         }
-        var rand = new rng.MT(parseInt(opts.seed, 36) + 1000);
+        var rand = new rng.MT(hashcode(opts.seed) + 2000);
         while(opts.stars) {
             var uColor = [1,1,1];
             var uRadius = 0;
@@ -75,7 +75,7 @@ module.exports = function(canvas) {
                 break;
             }
         }
-        var rand = new rng.MT(parseInt(opts.seed, 36) + 2000);
+        var rand = new rng.MT(hashcode(opts.seed) + 3000);
         while(opts.nebulae) {
             var uColor = [rand.random(), rand.random(), rand.random()];
             var uOffset = [rand.random() * 2000 - 1000, rand.random() * 2000 - 1000];
@@ -93,7 +93,7 @@ module.exports = function(canvas) {
                 break
             }
         }
-        var rand = new rng.MT(parseInt(opts.seed, 36) + 3000);
+        var rand = new rng.MT(hashcode(opts.seed) + 4000);
         if(opts.sun) {
             var uColor = [rand.random(), rand.random(), rand.random()];
             var uRadius = rand.random() * 0.025 + 0.025;
@@ -116,4 +116,13 @@ function loadProgram(gl, src) {
     src = src.replace("__noise3d__", noise3D);
     src = src.split("__split__");
     return new webgl.Program(gl, src[0], src[1]);
+}
+
+function hashcode(str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+        var char = str.charCodeAt(i)
+        hash += (i + 1) * char;
+    }
+    return hash;
 }

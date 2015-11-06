@@ -5367,7 +5367,7 @@ window.onload = function() {
         this.stars = params.stars === undefined ? true : params.stars === "true";
         this.sun = params.sun === undefined ? true : params.sun === "true";
         this.nebulae = params.nebulae === undefined ? true : params.nebulae === "true";
-        this.shortScale = params.shortScale === undefined ? true : params.shortScale;
+        this.shortScale = params.shortScale === undefined ? false : params.shortScale === "true";
         this.width = params.width || 1600;
         this.height = params.height || 900;
         this.render = function() {
@@ -5380,15 +5380,15 @@ window.onload = function() {
         autoPlace: false,
         width: 320
     });
-    gui.add(menu, 'seed').name("Seed").listen();
+    gui.add(menu, 'seed').name("Seed").listen().onFinishChange(render);
     gui.add(menu, 'randomize').name("Randomize seed");
     gui.add(menu, 'pointStars').name("Point stars").onChange(render);
     gui.add(menu, 'stars').name("Stars").onChange(render);
     gui.add(menu, 'sun').name("Sun").onChange(render);
     gui.add(menu, 'nebulae').name("Nebulae").onChange(render);
     gui.add(menu, 'shortScale').name("Short scale").onChange(render);
-    gui.add(menu, 'width').name("Width");
-    gui.add(menu, 'height').name("Height");
+    gui.add(menu, 'width').name("Width").onFinishChange(render);
+    gui.add(menu, 'height').name("Height").onFinishChange(render);
     gui.add(menu, 'render').name("Render");
     document.body.appendChild(gui.domElement);
     gui.domElement.style.position = "fixed";
@@ -5515,13 +5515,13 @@ module.exports = function(canvas) {
         if (opts.shortScale) {
             uRenderScale = Math.min(canvas.width, canvas.height);
         }
-        var rand = new rng.MT(parseInt(opts.seed, 36) + 0);
+        var rand = new rng.MT(hashcode(opts.seed) + 1000);
         if (opts.pointStars) {
             programStars.setUniform("uRenderScale", "1f", uRenderScale);
             programStars.setUniform("uDensity", "1f", rand.random() * 0.05);
             renderableStars.render();
         }
-        var rand = new rng.MT(parseInt(opts.seed, 36) + 1000);
+        var rand = new rng.MT(hashcode(opts.seed) + 2000);
         while(opts.stars) {
             var uColor = [1,1,1];
             var uRadius = 0;
@@ -5538,7 +5538,7 @@ module.exports = function(canvas) {
                 break;
             }
         }
-        var rand = new rng.MT(parseInt(opts.seed, 36) + 2000);
+        var rand = new rng.MT(hashcode(opts.seed) + 3000);
         while(opts.nebulae) {
             var uColor = [rand.random(), rand.random(), rand.random()];
             var uOffset = [rand.random() * 2000 - 1000, rand.random() * 2000 - 1000];
@@ -5556,7 +5556,7 @@ module.exports = function(canvas) {
                 break
             }
         }
-        var rand = new rng.MT(parseInt(opts.seed, 36) + 3000);
+        var rand = new rng.MT(hashcode(opts.seed) + 4000);
         if(opts.sun) {
             var uColor = [rand.random(), rand.random(), rand.random()];
             var uRadius = rand.random() * 0.025 + 0.025;
@@ -5579,6 +5579,15 @@ function loadProgram(gl, src) {
     src = src.replace("__noise3d__", noise3D);
     src = src.split("__split__");
     return new webgl.Program(gl, src[0], src[1]);
+}
+
+function hashcode(str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+        var char = str.charCodeAt(i)
+        hash += (i + 1) * char;
+    }
+    return hash;
 }
 
 },{"./webgl":19,"gl-matrix":1,"rng":16}],19:[function(require,module,exports){

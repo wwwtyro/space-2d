@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "budo index.js:bundle.js --live -- -t [ babelify --presets [ es2015 react ] ]"
+    "start": "budo index.js:bundle.js --live -- -t [ babelify --presets [ es2015 react ] ]",
+    "build": "browserify index.js -o bundle.js -t [ babelify --presets [ es2015 react ] ]"
   },
   "author": "Rye Terrell",
   "license": "Unlicense",
@@ -18,9 +19,7 @@
     "react": "^15.3.2",
     "react-addons-update": "^15.3.2",
     "react-dom": "^15.3.2",
-    "regl": "^1.2.1"
-  },
-  "dependencies": {
+    "regl": "^1.2.1",
     "gl-vec2": "^1.0.0",
     "rng": "^0.2.2"
   }

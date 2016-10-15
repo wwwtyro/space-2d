@@ -1,21 +1,29 @@
-<!DOCTYPE html>
-
 <html>
 
-    <head>
+  <head>
 
-        <script src="static/js/dat.gui.min.js"></script>
-        <script src="build/bundle.js"></script>
-        <link rel="stylesheet" type="text/css" href="static/css/index.css">
+    <style>
 
-    </head>
+      body {
+        margin: 0;
+        background: #ddd;
+      }
 
-    <body>
+      #render-canvas {
+        position: fixed;
+      }
 
-        <canvas id="render-canvas"></canvas>
+    </style>
 
-        <a href="http://wwwtyro.github.io"><img src="http://wwwtyro.github.io/media/badge-bl.png" style="position: fixed; left: 0px; bottom: 0px"></a>
+  </head>
 
-    </body>
+  <body>
+
+    <canvas id='render-canvas'></canvas>
+    <div id='gui'></div>
+
+  </body>
+
+  <script src="bundle.js"></script>
 
 </html>

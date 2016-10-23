@@ -25,11 +25,11 @@ export function createRenderer(regl) {
         if (d <= coreRadius) {
           gl_FragColor = vec4(coreColor, 1);
           return;
-        } else {
-          vec3 rgb = mix(coreColor, haloColor, 1.0 - exp(-(d - coreRadius) * haloFalloff));
-          rgb = mix(rgb, vec3(0,0,0), 1.0 - exp(-(d - coreRadius) * haloFalloff));
-          gl_FragColor = vec4(rgb + s.rgb, 1);
         }
+        float e = 1.0 - exp(-(d - coreRadius) * haloFalloff);
+        vec3 rgb = mix(coreColor, haloColor, e);
+        rgb = mix(rgb, vec3(0,0,0), e);
+        gl_FragColor = vec4(rgb + s.rgb, 1);
       }
     `,
     attributes: {
@@ -47,7 +47,6 @@ export function createRenderer(regl) {
       source: regl.prop('source')
     },
     framebuffer: regl.prop('destination'),
-    depth: {enable: false},
     viewport: regl.prop('viewport'),
     count: 6
   });

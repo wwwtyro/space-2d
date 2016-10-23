@@ -13,11 +13,9 @@ export default class Scene {
   constructor(canvas) {
     this.canvas = canvas;
     let regl = this.regl = REGL({ canvas: this.canvas });
-    this.pointStarSize = 1024;
-    this.pointStarTexture = pointStars.generateTexture(regl, this.pointStarSize);
-    this.ping = regl.framebuffer({color: regl.texture()});
-    this.pong = regl.framebuffer({color: regl.texture()});
-    this.pointStarRenderer = pointStars.createRenderer(regl);
+    this.pointStarTexture = regl.texture();
+    this.ping = regl.framebuffer({color: regl.texture(), depth: false, stencil: false, depthStencil: false});
+    this.pong = regl.framebuffer({color: regl.texture(), depth: false, stencil: false, depthStencil: false});
     this.starRenderer = star.createRenderer(regl);
     this.nebulaRenderer = nebula.createRenderer(regl);
     this.copyRenderer = copy.createRenderer(regl);
@@ -43,24 +41,31 @@ export default class Scene {
     }
 
     regl({ framebuffer: ping })( () => {
-      regl.clear({color: [0,0,0,0]});
+      regl.clear({color: [0,0,0,1]});
     });
     regl({ framebuffer: pong })( () => {
-      regl.clear({color: [0,0,0,0]});
+      regl.clear({color: [0,0,0,1]});
     });
 
+    let rand = random.rand(props.seed, 0);
     if (props.renderPointStars) {
-      this.pointStarRenderer({
-        texture: this.pointStarTexture,
+      let data = pointStars.generateTexture(width, height, 0.05, 0.125, rand.random.bind(rand));
+      this.pointStarTexture({
+        format: 'rgb',
+        width: width,
+        height: height,
+        wrapS: 'clamp',
+        wrapT: 'clamp',
+        data: data
+      });
+      this.copyRenderer({
+        source: this.pointStarTexture,
         destination: ping,
-        density: 0.05,
-        brightness: 0.125,
-        size: this.pointStarSize,
         viewport: viewport
       });
     }
 
-    let rand = random.rand(props.seed, 1000);
+    rand = random.rand(props.seed, 1000);
     let nebulaCount = 0;
     if (props.renderNebulae) nebulaCount = Math.round(rand.random() * 4 + 1);
     let nebulaOut = pingPong(ping, ping, pong, nebulaCount, (source, destination) => {

@@ -116,7 +116,6 @@ export function createRenderer(regl) {
       tNoiseSize: pgWidth
     },
     framebuffer: regl.prop('destination'),
-    depth: {enable: false},
     viewport: regl.prop('viewport'),
     count: 6
   });

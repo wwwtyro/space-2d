@@ -312,7 +312,6 @@ function createRenderer(regl) {
       tNoiseSize: pgWidth
     },
     framebuffer: regl.prop('destination'),
-    depth: { enable: false },
     viewport: regl.prop('viewport'),
     count: 6
   });
@@ -28981,40 +28980,24 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.generateTexture = generateTexture;
-exports.createRenderer = createRenderer;
-function generateTexture(regl, size) {
-  return regl.texture({
-    format: 'luminance alpha',
-    width: size,
-    height: size,
-    wrap: 'repeat',
-    wrapS: 'repeat',
-    wrapT: 'repeat',
-    data: new Uint8Array(size * size * 2).map(function () {
-      return Math.random() * 255;
-    })
-  });
-}
-
-function createRenderer(regl) {
-  return regl({
-    vert: '\n      precision highp float;\n      attribute vec2 position;\n      attribute vec2 uv;\n      varying vec2 vUV;\n      void main() {\n        gl_Position = vec4(position, 0, 1);\n        vUV = uv;\n      }\n    ',
-    frag: '\n      precision highp float;\n      uniform sampler2D texture;\n      uniform float size, density, brightness;\n      varying vec2 vUV;\n      void main() {\n        vec2 p = texture2D(texture, gl_FragCoord.xy/vec2(size, size)).ba;\n        float c = step(1.0 - density, p.x) * log(1.0 - p.y) * -brightness;\n        gl_FragColor = vec4(c,c,c, 1);\n      }\n    ',
-    attributes: {
-      position: regl.buffer([-1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1]),
-      uv: regl.buffer([0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1])
-    },
-    uniforms: {
-      texture: regl.prop('texture'),
-      size: regl.prop('size'),
-      density: regl.prop('density'),
-      brightness: regl.prop('brightness')
-    },
-    framebuffer: regl.prop('destination'),
-    depth: { enable: false },
-    viewport: regl.prop('viewport'),
-    count: 6
-  });
+function generateTexture(width, height, density, brightness, prng) {
+  // Determine the number of stars we're going to render.
+  var count = Math.round(width * height * density);
+  // Create a byte array for our texture.
+  var data = new Uint8Array(width * height * 3);
+  // For each star...
+  for (var i = 0; i < count; i++) {
+    // Select a random position.
+    var r = Math.floor(prng() * width * height);
+    // Select an intensity from an exponential distribution.
+    var c = Math.round(255 * Math.log(1 - prng()) * -brightness);
+    // Set a greyscale color with the intensity we chose at the pixel we selected.
+    data[r * 3 + 0] = c;
+    data[r * 3 + 1] = c;
+    data[r * 3 + 2] = c;
+  }
+  // Return the texture byte array.
+  return data;
 }
 
 },{}],237:[function(require,module,exports){
@@ -29086,11 +29069,9 @@ var Scene = function () {
 
     this.canvas = canvas;
     var regl = this.regl = REGL({ canvas: this.canvas });
-    this.pointStarSize = 1024;
-    this.pointStarTexture = pointStars.generateTexture(regl, this.pointStarSize);
-    this.ping = regl.framebuffer({ color: regl.texture() });
-    this.pong = regl.framebuffer({ color: regl.texture() });
-    this.pointStarRenderer = pointStars.createRenderer(regl);
+    this.pointStarTexture = regl.texture();
+    this.ping = regl.framebuffer({ color: regl.texture(), depth: false, stencil: false, depthStencil: false });
+    this.pong = regl.framebuffer({ color: regl.texture(), depth: false, stencil: false, depthStencil: false });
     this.starRenderer = star.createRenderer(regl);
     this.nebulaRenderer = nebula.createRenderer(regl);
     this.copyRenderer = copy.createRenderer(regl);
@@ -29120,24 +29101,31 @@ var Scene = function () {
       }
 
       regl({ framebuffer: ping })(function () {
-        regl.clear({ color: [0, 0, 0, 0] });
+        regl.clear({ color: [0, 0, 0, 1] });
       });
       regl({ framebuffer: pong })(function () {
-        regl.clear({ color: [0, 0, 0, 0] });
+        regl.clear({ color: [0, 0, 0, 1] });
       });
 
+      var rand = random.rand(props.seed, 0);
       if (props.renderPointStars) {
-        this.pointStarRenderer({
-          texture: this.pointStarTexture,
+        var data = pointStars.generateTexture(width, height, 0.05, 0.125, rand.random.bind(rand));
+        this.pointStarTexture({
+          format: 'rgb',
+          width: width,
+          height: height,
+          wrapS: 'clamp',
+          wrapT: 'clamp',
+          data: data
+        });
+        this.copyRenderer({
+          source: this.pointStarTexture,
           destination: ping,
-          density: 0.05,
-          brightness: 0.125,
-          size: this.pointStarSize,
           viewport: viewport
         });
       }
 
-      var rand = random.rand(props.seed, 1000);
+      rand = random.rand(props.seed, 1000);
       var nebulaCount = 0;
       if (props.renderNebulae) nebulaCount = Math.round(rand.random() * 4 + 1);
       var nebulaOut = pingPong(ping, ping, pong, nebulaCount, function (source, destination) {
@@ -29245,7 +29233,7 @@ exports.createRenderer = createRenderer;
 function createRenderer(regl) {
   return regl({
     vert: '\n      precision highp float;\n      attribute vec2 position;\n      attribute vec2 uv;\n      varying vec2 vUV;\n      void main() {\n        gl_Position = vec4(position, 0, 1);\n        vUV = uv;\n      }\n    ',
-    frag: '\n      precision highp float;\n      uniform sampler2D source;\n      uniform vec3 coreColor, haloColor;\n      uniform vec2 center, resolution;\n      uniform float coreRadius, haloFalloff, scale;\n      varying vec2 vUV;\n      void main() {\n        vec4 s = texture2D(source, vUV);\n        float d = length(gl_FragCoord.xy - center * resolution) / scale;\n        if (d <= coreRadius) {\n          gl_FragColor = vec4(coreColor, 1);\n          return;\n        } else {\n          vec3 rgb = mix(coreColor, haloColor, 1.0 - exp(-(d - coreRadius) * haloFalloff));\n          rgb = mix(rgb, vec3(0,0,0), 1.0 - exp(-(d - coreRadius) * haloFalloff));\n          gl_FragColor = vec4(rgb + s.rgb, 1);\n        }\n      }\n    ',
+    frag: '\n      precision highp float;\n      uniform sampler2D source;\n      uniform vec3 coreColor, haloColor;\n      uniform vec2 center, resolution;\n      uniform float coreRadius, haloFalloff, scale;\n      varying vec2 vUV;\n      void main() {\n        vec4 s = texture2D(source, vUV);\n        float d = length(gl_FragCoord.xy - center * resolution) / scale;\n        if (d <= coreRadius) {\n          gl_FragColor = vec4(coreColor, 1);\n          return;\n        }\n        float e = 1.0 - exp(-(d - coreRadius) * haloFalloff);\n        vec3 rgb = mix(coreColor, haloColor, e);\n        rgb = mix(rgb, vec3(0,0,0), e);\n        gl_FragColor = vec4(rgb + s.rgb, 1);\n      }\n    ',
     attributes: {
       position: regl.buffer([-1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1]),
       uv: regl.buffer([0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1])
@@ -29261,7 +29249,6 @@ function createRenderer(regl) {
       source: regl.prop('source')
     },
     framebuffer: regl.prop('destination'),
-    depth: { enable: false },
     viewport: regl.prop('viewport'),
     count: 6
   });
